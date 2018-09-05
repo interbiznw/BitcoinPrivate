@@ -2021,7 +2021,7 @@ UniValue encryptwallet(const UniValue& params, bool fHelp)
 
     std::string strWalletEncryptionDisabledMsg = "";
     if (!fEnableWalletEncryption) {
-        strWalletEncryptionDisabledMsg = "\nWARNING: Wallet encryption is DISABLED. This call always fails.\n";
+        strWalletEncryptionDisabledMsg = "\nWARNING: Wallet encryption is DISABLED. This call does nothing.\n";
     }
 
     if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
@@ -2054,7 +2054,7 @@ UniValue encryptwallet(const UniValue& params, bool fHelp)
     if (fHelp)
         return true;
     if (!fEnableWalletEncryption) {
-        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: wallet encryption is disabled.");
+        return false;
     }
     if (pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
