@@ -172,6 +172,8 @@ double benchmark_solve_equihash()
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << I;
 
+    unsigned int n = Params(CBaseChainParams::MAIN).EquihashN();
+    unsigned int k = Params(CBaseChainParams::MAIN).EquihashK();
     crypto_generichash_blake2b_state eh_state;
     EhInitialiseState(n, k, eh_state);
     crypto_generichash_blake2b_update(&eh_state, (unsigned char*)&ss[0], ss.size());
@@ -248,8 +250,6 @@ double benchmark_large_tx(size_t nInputs)
     spending_tx.nVersion = SAPLING_TX_VERSION;
 
     auto input_hash = orig_tx.GetHash();
-    // Add NUM_INPUTS inputs
-    for (size_t i = 0; i < NUM_INPUTS; i++) {
     // Add nInputs inputs
     for (size_t i = 0; i < nInputs; i++) {
         spending_tx.vin.emplace_back(input_hash, 0);
