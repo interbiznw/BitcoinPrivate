@@ -3069,6 +3069,8 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
     CBlockIndex *pindexNewTip = NULL;
     CBlockIndex *pindexMostWork = NULL;
     const CChainParams& chainParams = Params();
+    int nStopAtHeight = GetArg("-stopatheight", 0);
+    
     do {
         boost::this_thread::interruption_point();
 
@@ -3108,6 +3110,11 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
             GetMainSignals().UpdatedBlockTip(pindexNewTip);
             uiInterface.NotifyBlockTip(hashNewTip);
         }
+        
+        if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
+
+        if(ShutdownRequested())
+            break;
     } while(pindexMostWork != chainActive.Tip());
     CheckBlockIndex();
 
