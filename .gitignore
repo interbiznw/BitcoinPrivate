@@ -117,3 +117,4 @@ contrib/debian/files
 contrib/debian/substvars
 
 *.gen
+depends/packages/rust.mk
