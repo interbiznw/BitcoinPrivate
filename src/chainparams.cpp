@@ -157,8 +157,8 @@ public:
 
         nForkStartHeight = 272991;
         nForkHeightRange = 5467;
-		
-		nEquihashForkHeight = 600001;
+
+        nEquihashForkHeight = 600001;
         nEquihashNnew = 192;
         nEquihashKnew = 7;
     }
@@ -215,7 +215,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        
+
 
         // guarantees the first 2 characters, when base58 encoded, are "n1"
         base58Prefixes[PUBKEY_ADDRESS]     = {0x19,0x57};
@@ -246,10 +246,10 @@ public:
             0,
             0
         };
-	    
+
         nForkStartHeight = 10;
         nForkHeightRange = 0;
-	    
+
         nEquihashForkHeight = 5;
         nEquihashNnew = 192;
         nEquihashKnew = 7;
@@ -324,7 +324,7 @@ public:
 
         nForkStartHeight = 50;
         nForkHeightRange = 0;
-		
+
         nEquihashForkHeight = 100;
         nEquihashNnew = 192;
         nEquihashKnew = 7;

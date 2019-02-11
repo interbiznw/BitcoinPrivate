@@ -275,7 +275,7 @@ struct CNodeStateStats {
 
 struct CTimestampIndexIteratorKey {
      unsigned int timestamp;
- 
+
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 4;
      }
@@ -287,24 +287,24 @@ struct CTimestampIndexIteratorKey {
      void Unserialize(Stream& s, int nType, int nVersion) {
          timestamp = ser_readdata32be(s);
      }
- 
+
      CTimestampIndexIteratorKey(unsigned int time) {
          timestamp = time;
      }
- 
+
      CTimestampIndexIteratorKey() {
          SetNull();
      }
- 
+
      void SetNull() {
          timestamp = 0;
      }
  };
- 
+
  struct CTimestampIndexKey {
      unsigned int timestamp;
      uint256 blockHash;
- 
+
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 36;
      }
@@ -318,87 +318,87 @@ struct CTimestampIndexIteratorKey {
          timestamp = ser_readdata32be(s);
          blockHash.Unserialize(s, nType, nVersion);
      }
- 
+
      CTimestampIndexKey(unsigned int time, uint256 hash) {
          timestamp = time;
          blockHash = hash;
      }
- 
+
      CTimestampIndexKey() {
          SetNull();
      }
- 
+
      void SetNull() {
          timestamp = 0;
          blockHash.SetNull();
      }
  };
- 
+
  struct CTimestampBlockIndexKey {
      uint256 blockHash;
- 
+
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 32;
      }
- 
+
      template<typename Stream>
      void Serialize(Stream& s, int nType, int nVersion) const {
          blockHash.Serialize(s, nType, nVersion);
      }
- 
+
      template<typename Stream>
      void Unserialize(Stream& s, int nType, int nVersion) {
          blockHash.Unserialize(s, nType, nVersion);
      }
- 
+
      CTimestampBlockIndexKey(uint256 hash) {
          blockHash = hash;
      }
- 
+
      CTimestampBlockIndexKey() {
          SetNull();
      }
- 
+
      void SetNull() {
          blockHash.SetNull();
      }
  };
- 
+
  struct CTimestampBlockIndexValue {
      unsigned int ltimestamp;
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 4;
      }
- 
+
      template<typename Stream>
      void Serialize(Stream& s, int nType, int nVersion) const {
          ser_writedata32be(s, ltimestamp);
      }
- 
+
      template<typename Stream>
      void Unserialize(Stream& s, int nType, int nVersion) {
          ltimestamp = ser_readdata32be(s);
      }
- 
+
      CTimestampBlockIndexValue (unsigned int time) {
          ltimestamp = time;
      }
- 
+
      CTimestampBlockIndexValue() {
          SetNull();
      }
- 
+
      void SetNull() {
          ltimestamp = 0;
      }
  };
- 
+
  struct CAddressUnspentKey {
      unsigned int type;
      uint160 hashBytes;
      uint256 txhash;
      size_t index;
- 
+
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 57;
      }
@@ -416,18 +416,18 @@ struct CTimestampIndexIteratorKey {
          txhash.Unserialize(s, nType, nVersion);
          index = ser_readdata32(s);
      }
- 
+
      CAddressUnspentKey(unsigned int addressType, uint160 addressHash, uint256 txid, size_t indexValue) {
          type = addressType;
          hashBytes = addressHash;
          txhash = txid;
          index = indexValue;
      }
- 
+
      CAddressUnspentKey() {
          SetNull();
      }
- 
+
      void SetNull() {
          type = 0;
          hashBytes.SetNull();
@@ -435,42 +435,42 @@ struct CTimestampIndexIteratorKey {
          index = 0;
      }
  };
- 
+
  struct CAddressUnspentValue {
      CAmount satoshis;
      CScript script;
      int blockHeight;
- 
+
      ADD_SERIALIZE_METHODS;
- 
+
      template <typename Stream, typename Operation>
      inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
          READWRITE(satoshis);
          READWRITE(script);
          READWRITE(blockHeight);
      }
- 
+
      CAddressUnspentValue(CAmount sats, CScript scriptPubKey, int height) {
          satoshis = sats;
          script = scriptPubKey;
          blockHeight = height;
      }
- 
+
      CAddressUnspentValue() {
          SetNull();
      }
- 
+
      void SetNull() {
          satoshis = -1;
          script.clear();
          blockHeight = 0;
      }
- 
+
      bool IsNull() const {
          return (satoshis == -1);
      }
  };
- 
+
  struct CAddressIndexKey {
      unsigned int type;
      uint160 hashBytes;
@@ -479,7 +479,7 @@ struct CTimestampIndexIteratorKey {
      uint256 txhash;
      size_t index;
      bool spending;
- 
+
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 66;
      }
@@ -506,7 +506,7 @@ struct CTimestampIndexIteratorKey {
          char f = ser_readdata8(s);
          spending = f;
      }
- 
+
      CAddressIndexKey(unsigned int addressType, uint160 addressHash, int height, int blockindex,
                       uint256 txid, size_t indexValue, bool isSpending) {
          type = addressType;
@@ -517,11 +517,11 @@ struct CTimestampIndexIteratorKey {
          index = indexValue;
          spending = isSpending;
      }
- 
+
      CAddressIndexKey() {
          SetNull();
      }
- 
+
      void SetNull() {
          type = 0;
          hashBytes.SetNull();
@@ -531,13 +531,13 @@ struct CTimestampIndexIteratorKey {
          index = 0;
          spending = false;
      }
- 
+
  };
- 
+
  struct CAddressIndexIteratorKey {
      unsigned int type;
      uint160 hashBytes;
- 
+
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 21;
      }
@@ -551,27 +551,27 @@ struct CTimestampIndexIteratorKey {
          type = ser_readdata8(s);
          hashBytes.Unserialize(s, nType, nVersion);
      }
- 
+
      CAddressIndexIteratorKey(unsigned int addressType, uint160 addressHash) {
          type = addressType;
          hashBytes = addressHash;
      }
- 
+
      CAddressIndexIteratorKey() {
          SetNull();
      }
- 
+
      void SetNull() {
          type = 0;
          hashBytes.SetNull();
      }
  };
- 
+
  struct CAddressIndexIteratorHeightKey {
      unsigned int type;
      uint160 hashBytes;
      int blockHeight;
- 
+
      size_t GetSerializeSize(int nType, int nVersion) const {
          return 25;
      }
@@ -587,17 +587,17 @@ struct CTimestampIndexIteratorKey {
          hashBytes.Unserialize(s, nType, nVersion);
          blockHeight = ser_readdata32be(s);
      }
- 
+
      CAddressIndexIteratorHeightKey(unsigned int addressType, uint160 addressHash, int height) {
          type = addressType;
          hashBytes = addressHash;
          blockHeight = height;
      }
- 
+
      CAddressIndexIteratorHeightKey() {
          SetNull();
      }
- 
+
      void SetNull() {
          type = 0;
          hashBytes.SetNull();
@@ -749,7 +749,7 @@ bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, const 
  bool GetAddressUnspent(uint160 addressHash, int type,
                         std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> > &unspentOutputs);
 
-						
+
 /** Functions for disk access for blocks */
 bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos, const CMessageHeader::MessageStartChars& messageStart);
 bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos

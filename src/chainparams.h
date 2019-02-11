@@ -11,6 +11,7 @@
 #include "chainparamsbase.h"
 #include "checkpoints.h"
 #include "consensus/params.h"
+#include "crypto/equihash.h"
 #include "primitives/block.h"
 #include "crypto/equihash.h"
 #include "protocol.h"
@@ -65,7 +66,7 @@ public:
     bool RequireStandard() const { return fRequireStandard; }
     int64_t MaxTipAge() const { return nMaxTipAge; }
     int64_t PruneAfterHeight() const { return nPruneAfterHeight; }
-   
+
     unsigned int EquihashN(int height) const
     {
         if(height >= nEquihashForkHeight)
@@ -132,8 +133,8 @@ protected:
 
     uint64_t nForkStartHeight;
     uint64_t nForkHeightRange;
-	
-	
+
+
     uint64_t nEquihashForkHeight;
     unsigned int nEquihashNnew;
     unsigned int nEquihashKnew;

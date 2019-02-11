@@ -700,12 +700,12 @@ void static BitcoinMiner()
     unsigned int k = chainparams.EquihashK(pindexPrev->nHeight + 1);
 
     std::string solver = GetArg("-equihashsolver", "default");
-	
+
     // TODO: parameterize n & k tromp solver and remove temporary workaround below
     if (n == 200 && k == 9) solver = "default";
     if (n == 192 && k == 7) solver = "tromp";
     assert(solver == "tromp" || solver == "default");
-	
+
     LogPrint("pow", "Using Equihash solver \"%s\" with n = %u, k = %u\n", solver, n, k);
 
     std::mutex m_cs;
@@ -748,10 +748,13 @@ void static BitcoinMiner()
             // Create new block
             //
             unique_ptr<CBlockTemplate> pblocktemplate;
-			
+
 			n = chainparams.EquihashN(pindexPrev->nHeight + 1);
             k = chainparams.EquihashK(pindexPrev->nHeight + 1);
 
+
+            n = chainparams.EquihashN(pindexPrev->nHeight + 1);
+            k = chainparams.EquihashK(pindexPrev->nHeight + 1);
 
             bool isNextBlockFork = isForkBlock(pindexPrev->nHeight+1);
 
@@ -840,7 +843,7 @@ void static BitcoinMiner()
                                                   pblock->nNonce.size());
 
                 // (x_1, x_2, ...) = A(I, V, n, k)
-                 LogPrint("pow", "Running Equihash solver \"%s\" (%u,%u) with nNonce = %s\n",
+                LogPrint("pow", "Running Equihash solver \"%s\" (%u,%u) with nNonce = %s\n",
                          solver,n, k, pblock->nNonce.ToString());
 
                 std::function<bool(std::vector<unsigned char>)> validBlock =
@@ -889,6 +892,11 @@ void static BitcoinMiner()
                     std::lock_guard<std::mutex> lock{m_cs};
                     return cancelSolver;
                 };
+				// TODO: parameterize n & k tromp solver and remove temporary workaround below
+    			if (n == 200 && k == 9) solver = "default";
+			    if (n == 192 && k == 7) solver = "tromp";
+    			assert(solver == "tromp" || solver == "default");
+
 				// TODO: parameterize n & k tromp solver and remove temporary workaround below
     			if (n == 200 && k == 9) solver = "default";
 			    if (n == 192 && k == 7) solver = "tromp";
