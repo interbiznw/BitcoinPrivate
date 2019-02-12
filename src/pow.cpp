@@ -1,7 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
-// Copyright (c) 2016-2017 The Zcash developers
-// Copyright (c) 2017-2019 The Bitcoin Private developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,7 +9,6 @@
 #include "chain.h"
 #include "chainparams.h"
 #include "crypto/equihash.h"
-#include "main.h"
 #include "primitives/block.h"
 #include "streams.h"
 #include "uint256.h"
@@ -19,38 +16,27 @@
 
 #include "sodium.h"
 
-#ifdef ENABLE_RUST
-#include "librustzcash.h"
-#endif // ENABLE_RUST
-
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-    int nHeight = pindexLast->nHeight + 1;
-
-    arith_uint256 proofOfWorkLimit;
-    if(!isForkEnabled(nHeight))
-        proofOfWorkLimit = UintToArith256(params.prePowLimit);
-    else
-        proofOfWorkLimit = UintToArith256(params.powLimit);
-
-    unsigned int nProofOfWorkLimit = proofOfWorkLimit.GetCompact();
-    unsigned int nProofOfWorkBomb  = UintToArith256(uint256S("000000000000000000000000000000000000000000000000000000000000ffff")).GetCompact();
+    unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Genesis block
     if (pindexLast == NULL)
         return nProofOfWorkLimit;
 
-    // right at fork
-    else if(isForkBlock(nHeight) && !isForkBlock(nHeight - params.nPowAveragingWindow))
-        return nProofOfWorkLimit;
-
-    // right post fork
-    else if(!isForkBlock(nHeight) && isForkBlock(nHeight - params.nPowAveragingWindow))
-        return nProofOfWorkLimit;
-
-    // difficulty bomb
-    else if(pindexLast->nHeight > params.nPowDifficultyBombHeight)
-        return nProofOfWorkBomb;
+    {
+        // Comparing to pindexLast->nHeight with >= because this function
+        // returns the work required for the block after pindexLast.
+        if (params.nPowAllowMinDifficultyBlocksAfterHeight != boost::none &&
+            pindexLast->nHeight >= params.nPowAllowMinDifficultyBlocksAfterHeight.get())
+        {
+            // Special difficulty rule for testnet:
+            // If the new block's timestamp is more than 6 * 2.5 minutes
+            // then allow mining of a min-difficulty block.
+            if (pblock && pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing * 6)
+                return nProofOfWorkLimit;
+        }
+    }
 
     // Find the first block in the averaging interval
     const CBlockIndex* pindexFirst = pindexLast;
@@ -68,29 +54,29 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     arith_uint256 bnAvg {bnTot / params.nPowAveragingWindow};
 
-    bool isFork = isForkBlock(pindexLast->nHeight + 1);
-    return CalculateNextWorkRequired(bnAvg, pindexLast->GetMedianTimePast(), pindexFirst->GetMedianTimePast(), params, proofOfWorkLimit, isFork);
+    return CalculateNextWorkRequired(bnAvg, pindexLast->GetMedianTimePast(), pindexFirst->GetMedianTimePast(), params);
 }
 
 unsigned int CalculateNextWorkRequired(arith_uint256 bnAvg,
                                        int64_t nLastBlockTime, int64_t nFirstBlockTime,
-                                       const Consensus::Params& params, const arith_uint256 bnPowLimit, bool isFork)
+                                       const Consensus::Params& params)
 {
     // Limit adjustment step
     // Use medians to prevent time-warp attacks
     int64_t nActualTimespan = nLastBlockTime - nFirstBlockTime;
     LogPrint("pow", "  nActualTimespan = %d  before dampening\n", nActualTimespan);
-    nActualTimespan = params.AveragingWindowTimespan(isFork) + (nActualTimespan - params.AveragingWindowTimespan(isFork))/4;
+    nActualTimespan = params.AveragingWindowTimespan() + (nActualTimespan - params.AveragingWindowTimespan())/4;
     LogPrint("pow", "  nActualTimespan = %d  before bounds\n", nActualTimespan);
 
-    if (nActualTimespan < params.MinActualTimespan(isFork))
-        nActualTimespan = params.MinActualTimespan(isFork);
-    if (nActualTimespan > params.MaxActualTimespan(isFork))
-        nActualTimespan = params.MaxActualTimespan(isFork);
+    if (nActualTimespan < params.MinActualTimespan())
+        nActualTimespan = params.MinActualTimespan();
+    if (nActualTimespan > params.MaxActualTimespan())
+        nActualTimespan = params.MaxActualTimespan();
 
     // Retarget
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew {bnAvg};
-    bnNew /= params.AveragingWindowTimespan(isFork);
+    bnNew /= params.AveragingWindowTimespan();
     bnNew *= nActualTimespan;
 
     if (bnNew > bnPowLimit)
@@ -107,20 +93,8 @@ unsigned int CalculateNextWorkRequired(arith_uint256 bnAvg,
 
 bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams& params)
 {
-    uint64_t forkHeight = params.EquihashForkHeight();
-    unsigned int solution_size = pblock->nSolution.size();
-
-    unsigned int n;
-    unsigned int k;
-    if (solution_size == params.EquihashSolutionWidth(forkHeight)) {
-        n = params.EquihashN(forkHeight);
-        k = params.EquihashK(forkHeight);
-    } else if (forkHeight > 0 && solution_size == params.EquihashSolutionWidth(forkHeight - 1)) {
-        n = params.EquihashN(forkHeight - 1);
-        k = params.EquihashK(forkHeight - 1);
-    } else {
-        return error("CheckEquihashsolution(): invalid solution size");
-    }
+    unsigned int n = params.EquihashN();
+    unsigned int k = params.EquihashK();
 
     // Hash state
     crypto_generichash_blake2b_state state;
@@ -135,14 +109,6 @@ bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams& param
 
     // H(I||V||...
     crypto_generichash_blake2b_update(&state, (unsigned char*)&ss[0], ss.size());
-
-    #ifdef ENABLE_RUST
-    // Ensure that our Rust interactions are working in production builds. This is
-    // temporary and should be removed.
-    {
-        assert(librustzcash_xor(0x0f0f0f0f0f0f0f0f, 0x1111111111111111) == 0x1e1e1e1e1e1e1e1e);
-    }
-    #endif // ENABLE_RUST
 
     bool isValid;
     EhIsValidSolution(n, k, state, pblock->nSolution, isValid);

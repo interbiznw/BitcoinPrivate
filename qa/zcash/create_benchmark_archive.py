@@ -5,19 +5,18 @@ import plyvel
 import progressbar
 import os
 import stat
-import struct
 import subprocess
 import sys
 import tarfile
 import time
 
-ZCASH_CLI = './src/btcp-cli'
+ZCASH_CLI = './src/zcash-cli'
 USAGE = """
 Requirements:
 - find
 - xz
 - %s (edit ZCASH_CLI in this script to alter the path)
-- A running mainnet btcpd using the default datadir with -txindex=1
+- A running mainnet zcashd using the default datadir with -txindex=1
 
 Example usage:
 

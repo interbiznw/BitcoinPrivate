@@ -17,6 +17,7 @@
 #include "utiltime.h"
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
@@ -124,7 +125,7 @@ void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAF
 }
 
 // Init
-class CInit
+static class CInit
 {
 public:
     CInit()
@@ -178,6 +179,20 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
 static list<string> *vMsgsBeforeOpenLog;
+
+[[noreturn]] void new_handler_terminate()
+{
+    // Rather than throwing std::bad-alloc if allocation fails, terminate
+    // immediately to (try to) avoid chain corruption.
+    // Since LogPrintf may itself allocate memory, set the handler directly
+    // to terminate first.
+    std::set_new_handler(std::terminate);
+    fputs("Error: Out of memory. Terminating.\n", stderr);
+    LogPrintf("Error: Out of memory. Terminating.\n");
+
+    // The log was successful, terminate now.
+    std::terminate();
+};
 
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
@@ -444,13 +459,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\BTCPrivate
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\BTCPrivate
-    // Mac: ~/Library/Application Support/BTCPrivate
-    // Unix: ~/.btcprivate
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Zcash
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Zcash
+    // Mac: ~/Library/Application Support/Zcash
+    // Unix: ~/.zcash
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "BTCPrivate";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Zcash";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -462,10 +477,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "BTCPrivate";
+    return pathRet / "Zcash";
 #else
     // Unix
-    return pathRet / ".btcprivate";
+    return pathRet / ".zcash";
 #endif
 #endif
 }
@@ -582,7 +597,7 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", "btcprivate.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-conf", "zcash.conf"));
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
@@ -601,7 +616,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 
     for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override btcprivate.conf
+        // Don't overwrite existing settings so command line settings override zcash.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
@@ -618,7 +633,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 #ifndef WIN32
 boost::filesystem::path GetPidFile()
 {
-    boost::filesystem::path pathPidFile(GetArg("-pid", "btcpd.pid"));
+    boost::filesystem::path pathPidFile(GetArg("-pid", "zcashd.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
@@ -891,8 +906,8 @@ void SetThreadPriority(int nPriority)
 std::string PrivacyInfo()
 {
     return "\n" +
-           FormatParagraph(strprintf(_("To ensure you are fully protecting your privacy when running BTCP, see <%s>."),
-                                     "doc/security-warnings.md")) + "\n";
+           FormatParagraph(strprintf(_("In order to ensure you are adequately protecting your privacy when using Zcash, please see <%s>."),
+                                     "https://z.cash/support/security/")) + "\n";
 }
 
 std::string LicenseInfo()
@@ -900,22 +915,17 @@ std::string LicenseInfo()
     return "\n" +
            FormatParagraph(strprintf(_("Copyright (C) 2009-%i The Bitcoin Core Developers"), COPYRIGHT_YEAR)) + "\n" +
            FormatParagraph(strprintf(_("Copyright (C) 2015-%i The Zcash Developers"), COPYRIGHT_YEAR)) + "\n" +
-           FormatParagraph(strprintf(_("Copyright (C) 2015-%i The Zclassic Developers"), COPYRIGHT_YEAR)) + "\n" +
-           FormatParagraph(strprintf(_("Copyright (C) 2017-%i The Bitcoin Private Developers"), COPYRIGHT_YEAR)) + "\n" +
            "\n" +
            FormatParagraph(_("This is experimental software.")) + "\n" +
            "\n" +
            FormatParagraph(_("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.")) + "\n" +
            "\n" +
-           FormatParagraph(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.")) +
+           FormatParagraph(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young.")) +
            "\n";
 }
 
 int GetNumCores()
 {
-#if BOOST_VERSION >= 105600
     return boost::thread::physical_concurrency();
-#else // Must fall back to hardware_concurrency, which unfortunately counts virtual cores
-    return boost::thread::hardware_concurrency();
-#endif
 }
+
