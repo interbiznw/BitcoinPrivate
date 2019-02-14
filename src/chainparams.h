@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
 // Copyright (c) 2016-2017 The Zcash developers
-// Copyright (c) 2019 The Bitcoin Private developers
+// Copyright (c) 2017-2019 The Bitcoin Private developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 
 #include "chainparamsbase.h"
 #include "consensus/params.h"
+#include "crypto/equihash.h"
 #include "primitives/block.h"
 #include "protocol.h"
 
@@ -80,7 +81,7 @@ public:
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
     int64_t PruneAfterHeight() const { return nPruneAfterHeight; }
-  
+
     unsigned int EquihashN(int height) const
     {
         if(height >= nEquihashForkHeight)
@@ -119,8 +120,9 @@ public:
 
     uint64_t ForkStartHeight() const { return nForkStartHeight; };
     uint64_t ForkHeightRange() const { return nForkHeightRange; };
+
     uint64_t EquihashForkHeight() const { return nEquihashForkHeight; };
-  
+
 protected:
     CChainParams() {}
 
@@ -150,6 +152,7 @@ protected:
 
     uint64_t nForkStartHeight;
     uint64_t nForkHeightRange;
+
     uint64_t nEquihashForkHeight;
     unsigned int nEquihashNnew;
     unsigned int nEquihashKnew;

@@ -1,7 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
 // Copyright (c) 2016-2017 The Zcash developers
-// Copyright (c) 2019 The Bitcoin Private developers
+// Copyright (c) 2017-2019 The Bitcoin Private developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -210,8 +210,9 @@ UniValue generate(const UniValue& params, bool fHelp)
 
     while (nHeight < nHeightEnd)
     {
-		    n = chainparams.EquihashN(nHeight + 1);
+        n = chainparams.EquihashN(nHeight + 1);
         k = chainparams.EquihashK(nHeight + 1);
+
 #ifdef ENABLE_WALLET
         std::unique_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
 #else

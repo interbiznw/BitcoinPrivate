@@ -1,6 +1,6 @@
 // Copyright (c) 2016 Jack Grigg
 // Copyright (c) 2016 The Zcash developers
-// Copyright (c) 2019 The Bitcoin Private developers
+// Copyright (c) 2017-2019 The Bitcoin Private developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -314,6 +314,28 @@ inline unsigned int EhSolutionWidth(int n, int k)
     return ret;
 }
 
+
+inline unsigned int EhSolutionWidth(int n, int k)
+{
+    unsigned int ret;
+    if (n == 96 && k == 3) {
+        ret = Eh96_3.SolutionWidth;
+    } else if (n == 200 && k == 9) {
+        ret = Eh200_9.SolutionWidth;
+    } else if (n == 192 && k == 7) {
+        ret = Eh192_7.SolutionWidth;
+    } else if (n == 144 && k == 5) {
+        ret = Eh144_5.SolutionWidth;
+    } else if (n == 96 && k == 5) {
+        ret = Eh96_5.SolutionWidth;
+    } else if (n == 48 && k == 5) {
+        ret = Eh48_5.SolutionWidth;
+    } else {
+        throw std::invalid_argument("Unsupported Equihash parameters");
+    }
+
+    return ret;
+}
 
 inline unsigned int EhSolutionWidth(int n, int k)
 {
