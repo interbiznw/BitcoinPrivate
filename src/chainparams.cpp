@@ -174,6 +174,7 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         strCurrencyUnits = "BTCPT";
+        bip44CoinType = 1;
         consensus.fCoinbaseMustBeProtected = true;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
