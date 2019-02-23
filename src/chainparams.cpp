@@ -176,6 +176,7 @@ public:
         strCurrencyUnits = "BTCPT";
         bip44CoinType = 1;
         consensus.fCoinbaseMustBeProtected = true;
+        consensus.nSubsidyHalvingInterval = 840000;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 400;
