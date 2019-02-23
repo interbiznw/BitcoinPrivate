@@ -40,6 +40,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         strCurrencyUnits = "BTCP";
+        bip44CoinType = 183; // As registered in https://github.com/satoshilabs/slips/blob/master/slip-0044.md
         consensus.fCoinbaseMustBeProtected = true;
         consensus.nSubsidySlowStartInterval = 2;
         consensus.nSubsidyHalvingInterval = 840000;
